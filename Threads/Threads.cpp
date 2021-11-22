@@ -7,6 +7,7 @@
 #define MAX_LOADSTRING 100
 
 #define CMD_BUTTON_1   1001
+#define CMD_BUTTON_2   1002
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -21,6 +22,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 void                StartThread();
+void                StartThread2();
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -134,6 +136,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         CreateWindowW(L"Button", L"Thread", WS_CHILD | WS_VISIBLE, 10, 10, 75, 23, hWnd,
                             (HMENU)CMD_BUTTON_1, hInst, 0);
+        CreateWindowW(L"Button", L"Thread2", WS_CHILD | WS_VISIBLE, 10, 40, 75, 23, hWnd,
+            (HMENU)CMD_BUTTON_2, hInst, 0);
         break;
     case WM_COMMAND:
         {
@@ -143,6 +147,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case CMD_BUTTON_1:
                 StartThread();
+                break;
+            case CMD_BUTTON_2:
+                StartThread2();
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -193,7 +200,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 DWORD WINAPI ThreadProc(LPVOID params) {
-    MessageBoxW(NULL, L"Hello from thread", L"Works", MB_YESNOCANCEL);
+    int res = MessageBoxW(NULL, L"Hello from thread", L"Works", MB_YESNOCANCEL);
+    // DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), NULL, About);
     return 0;
 }
 
@@ -206,6 +214,11 @@ void StartThread() {    // Button click handler
         0,              // Creation flags
         NULL            // Thread Id pointer
     );
+    
+}
+
+void StartThread2() {
+
 }
 
 
