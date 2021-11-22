@@ -1,5 +1,4 @@
     // Threads.cpp : Defines the entry point for the application.
-//
 
 #include "framework.h"
 #include "Threads.h"
@@ -21,6 +20,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
+int threadCounter = 0;
 void                StartThread();
 void                StartThread2();
 
@@ -200,8 +200,11 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 DWORD WINAPI ThreadProc(LPVOID params) {
-    int res = MessageBoxW(NULL, L"Hello from thread", L"Works", MB_YESNOCANCEL);
-    // DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), NULL, About);
+    WCHAR str[100];
+    ++threadCounter;
+    _itow_s(threadCounter, str, 10);
+    MessageBoxW(NULL, (WCHAR*)str, (WCHAR*)params, MB_YESNOCANCEL);
+    threadCounter = _wtoi(str);
     return 0;
 }
 
@@ -210,16 +213,18 @@ void StartThread() {    // Button click handler
         NULL,           // Attribute for thread
         0,              // Stack limit (0 - sys default)
         ThreadProc,     // Address of thread fucntion
-        NULL,           // Pointer to parameter(s)
+        szTitle,           // Pointer to parameter(s)
         0,              // Creation flags
         NULL            // Thread Id pointer
     );
-    
 }
 
 DWORD WINAPI ThreadProc2(LPVOID params) {
-    int res = MessageBoxW(NULL, L"Hello from thread2", (WCHAR*)params, MB_YESNOCANCEL);
-    // DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), NULL, About);
+    WCHAR str[100];
+    ++threadCounter;
+    _itow_s(threadCounter, str, 10);
+    MessageBoxW(NULL, (WCHAR*)str, (WCHAR*)params, MB_YESNOCANCEL);
+    threadCounter = _wtoi(str);
     return 0;
 }
 
