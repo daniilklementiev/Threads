@@ -6,16 +6,22 @@
 
 #define MAX_LOADSTRING 100
 
+#define CMD_BUTTON_1   1001
+
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+void                StartThread();
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -125,12 +131,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+        CreateWindowW(L"Button", L"Thread", WS_CHILD | WS_VISIBLE, 10, 10, 75, 23, hWnd,
+                            (HMENU)CMD_BUTTON_1, hInst, 0);
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
             {
+            case CMD_BUTTON_1:
+                StartThread();
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -178,3 +191,21 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+DWORD WINAPI ThreadProc(LPVOID params) {
+    MessageBoxW(NULL, L"Hello from thread", L"Works", MB_YESNOCANCEL);
+    return 0;
+}
+
+void StartThread() {    // Button click handler
+    CreateThread(
+        NULL,           // Attribute for thread
+        0,              // Stack limit (0 - sys default)
+        ThreadProc,     // Address of thread fucntion
+        NULL,           // Pointer to parameter(s)
+        0,              // Creation flags
+        NULL            // Thread Id pointer
+    );
+}
+
+
