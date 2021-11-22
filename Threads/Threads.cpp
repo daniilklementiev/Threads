@@ -217,8 +217,20 @@ void StartThread() {    // Button click handler
     
 }
 
-void StartThread2() {
-
+DWORD WINAPI ThreadProc2(LPVOID params) {
+    int res = MessageBoxW(NULL, L"Hello from thread2", (WCHAR*)params, MB_YESNOCANCEL);
+    // DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), NULL, About);
+    return 0;
 }
 
+void StartThread2() {   
+    CreateThread(
+        NULL,           
+        0,              
+        ThreadProc2,    
+        szTitle,            // Params to thread       
+        0,              
+        NULL            
+    );
 
+}

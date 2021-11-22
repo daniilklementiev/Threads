@@ -13,10 +13,17 @@
 
 -----
 Схема запуска:
-Button-Click --> WM_COMMAND --> StartThread() --> CreateThread() --> End
-														|
-														|
-														V
-												 ThreadProc --> MessageBox --> End
+Button-Click --> WM_COMMAND --> 
+StartThread() --> CreateThread() --> End
+					|
+					|
+					V
+			   ThreadProc --> MessageBox --> End
 Если будет и MessageBox, и DialogBox внутри процедуры CreateThread, то какое окно отобразится раньше ответа нет - 
 																					меняется от запуска к запуску
+
+Button-Click --> WM_COMMAND --> StartThread() --> CreateThread2(... szTitle, ...) --> End
+														  |			 |
+														  |			 |	
+														  V			 V
+														ThreadProc2(param) --> MessageBox(.... params ....) --> End
