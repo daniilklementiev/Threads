@@ -145,7 +145,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CreateWindowW(L"Button", L"Thread3", WS_CHILD | WS_VISIBLE, 10, 70, 75, 23, hWnd,
             (HMENU)CMD_BUTTON_3, hInst, 0);
 
-        list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE | WS_VSCROLL, 100, 10, 250, 300, hWnd,
+        list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE | WS_VSCROLL, 100, 10, 270, 300, hWnd,
             NULL, hInst, 0);
 
         break;
@@ -280,7 +280,8 @@ DWORD WINAPI ThreadProc3(LPVOID params) {
         _snwprintf_s(txt, 100, L"Your balance after %d months : %.2f", data->month, deposit);
         SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
         counter = -1;
-        *hts = 0;
+        //*hts = 0;
+        CloseHandle(hts);
     }
     delete data;
     return 0;
