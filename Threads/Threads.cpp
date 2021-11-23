@@ -31,6 +31,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+    
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -84,7 +85,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_THREADS));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+3);
+    wcex.hbrBackground = CreateSolidBrush(RGB(106, 90, 205));
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_THREADS);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -144,7 +145,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CreateWindowW(L"Button", L"Thread3", WS_CHILD | WS_VISIBLE, 10, 70, 75, 23, hWnd,
             (HMENU)CMD_BUTTON_3, hInst, 0);
 
-        list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE, 100, 10, 100, 200, hWnd,
+        list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE | WS_VSCROLL, 100, 10, 250, 300, hWnd,
             NULL, hInst, 0);
 
         break;
@@ -255,20 +256,41 @@ void StartThread2() {
 }
 /********************************************************/
 
+float deposit;
+struct DepData {
+    int month;
+    float percent;
+    DepData(int m, float p) : month{ m }, percent{ p } {}
+
+};
+
 
 
 DWORD WINAPI ThreadProc3(LPVOID params) {
-    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)params);
+    DepData* data = (DepData*)params;
+    WCHAR txt[100];
+    deposit *= 1 + data->percent / 100.0;
+    _snwprintf_s(txt, 100, L"month %d perc %.2f, total %.2f", data->month, data->percent, deposit);
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
+    delete data;
     return 0;
 }
 
+HANDLE hts[12]; // threads handles
+
 void StartThread3() {
-    CreateThread(
-        NULL,
-        0,
-        ThreadProc3,
-        szTitle,            // Params to thread       
-        0,
-        NULL
-    );
+    deposit = 100;
+    
+    for (size_t i = 0; i < 12; i++) {
+        hts[i] = CreateThread(
+            NULL,
+            0,
+            ThreadProc3,
+            new DepData(1+i, 10),            // Params to thread       
+            0,
+            NULL
+        );
+        
+    } 
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"End-for");
 }
