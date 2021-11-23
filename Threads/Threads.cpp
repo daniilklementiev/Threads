@@ -300,7 +300,6 @@ void StartThread3() {
             0,
             NULL
         );
-        
     } 
 
     
