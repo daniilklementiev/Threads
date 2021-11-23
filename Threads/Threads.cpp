@@ -7,12 +7,13 @@
 
 #define CMD_BUTTON_1   1001
 #define CMD_BUTTON_2   1002
+#define CMD_BUTTON_3   1003
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-
+HWND list;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -23,7 +24,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 int threadCounter = 0;
 void                StartThread();
 void                StartThread2();
-
+void                StartThread3();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -83,7 +84,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_THREADS));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+3);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_THREADS);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -138,6 +139,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             (HMENU)CMD_BUTTON_1, hInst, 0);
         CreateWindowW(L"Button", L"Thread2", WS_CHILD | WS_VISIBLE, 10, 40, 75, 23, hWnd,
             (HMENU)CMD_BUTTON_2, hInst, 0);
+
+
+        CreateWindowW(L"Button", L"Thread3", WS_CHILD | WS_VISIBLE, 10, 70, 75, 23, hWnd,
+            (HMENU)CMD_BUTTON_3, hInst, 0);
+
+        list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE, 100, 10, 100, 200, hWnd,
+            NULL, hInst, 0);
+
         break;
     case WM_COMMAND:
         {
@@ -150,6 +159,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case CMD_BUTTON_2:
                 StartThread2();
+                break;
+            case CMD_BUTTON_3:
+                StartThread3();
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -199,8 +211,9 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
+
 DWORD WINAPI ThreadProc(LPVOID params) {
-    WCHAR str[100];
+    WCHAR str[100] = L"\0";
     ++threadCounter;
     _itow_s(threadCounter, str, 10);
     MessageBoxW(NULL, (WCHAR*)str, (WCHAR*)params, MB_YESNOCANCEL);
@@ -219,8 +232,9 @@ void StartThread() {    // Button click handler
     );
 }
 
+
 DWORD WINAPI ThreadProc2(LPVOID params) {
-    WCHAR str[100];
+    WCHAR str[100] = L"\0";
     ++threadCounter;
     _itow_s(threadCounter, str, 10);
     MessageBoxW(NULL, (WCHAR*)str, (WCHAR*)params, MB_YESNOCANCEL);
@@ -238,4 +252,23 @@ void StartThread2() {
         NULL            
     );
 
+}
+/********************************************************/
+
+
+
+DWORD WINAPI ThreadProc3(LPVOID params) {
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)params);
+    return 0;
+}
+
+void StartThread3() {
+    CreateThread(
+        NULL,
+        0,
+        ThreadProc3,
+        szTitle,            // Params to thread       
+        0,
+        NULL
+    );
 }
