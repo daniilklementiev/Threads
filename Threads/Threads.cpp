@@ -258,7 +258,6 @@ void StartThread2() {
 
 float deposit;
 short counter = -1;
-
 struct DepData {
     int month;
     float percent;
@@ -266,9 +265,10 @@ struct DepData {
 
 };
 
-
+HANDLE hts[12]; // threads handles
 
 DWORD WINAPI ThreadProc3(LPVOID params) {
+    
     DepData* data = (DepData*)params;
     WCHAR txt[100];
     deposit *= 1 + data->percent / 100.0;
@@ -277,14 +277,16 @@ DWORD WINAPI ThreadProc3(LPVOID params) {
     ++counter;
     if (counter == 11)
     {
-        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"end");
+        _snwprintf_s(txt, 100, L"Your balance after %d months : %.2f", data->month, deposit);
+        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
         counter = -1;
+        *hts = 0;
     }
     delete data;
     return 0;
 }
 
-HANDLE hts[12]; // threads handles
+
 
 void StartThread3() {
     deposit = 100;
@@ -300,6 +302,9 @@ void StartThread3() {
         );
         
     } 
-    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"End-for");
+
+    
+
+    // SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"End-for");
     
 }
