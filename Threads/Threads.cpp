@@ -8,6 +8,7 @@
 #define CMD_BUTTON_1   1001
 #define CMD_BUTTON_2   1002
 #define CMD_BUTTON_3   1003
+#define CMD_BUTTON_4   1004
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -25,6 +26,7 @@ int threadCounter = 0;
 void                StartThread();
 void                StartThread2();
 void                StartThread3();
+void                StartThread4();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -148,6 +150,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         list = CreateWindowW(L"Listbox", L"", WS_CHILD | WS_VISIBLE | WS_VSCROLL, 100, 10, 270, 300, hWnd,
             NULL, hInst, 0);
 
+        CreateWindowW(L"Button", L"Thread4", WS_CHILD | WS_VISIBLE, 10, 100, 75, 23, hWnd,
+            (HMENU)CMD_BUTTON_4, hInst, 0);
         break;
     case WM_COMMAND:
         {
@@ -163,6 +167,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case CMD_BUTTON_3:
                 StartThread3();
+                break;
+            case CMD_BUTTON_4:
+                StartThread4();
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -256,8 +263,10 @@ void StartThread2() {
 }
 /********************************************************/
 
-float deposit;
-short counter = -1;
+HANDLE hts[12]; // threads handles
+
+float deposit = 100;
+short activeThreads;    // threads counter
 struct DepData {
     int month;
     float percent;
@@ -265,33 +274,46 @@ struct DepData {
 
 };
 
-HANDLE hts[12]; // threads handles
+DWORD WINAPI Finalizer(LPVOID params) {
+    for (size_t i = 0; i < 12; i++)
+    {
+        if (hts[i] != NULL)
+        {
+            CloseHandle(hts[i]);
+            hts[i] = NULL;
+        }
+    }
+    WCHAR txt[100];
+    _snwprintf_s(txt, 100, L"------ total %.2f", deposit);
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
+    return 0;
+}
+
+
 
 DWORD WINAPI ThreadProc3(LPVOID params) {
-    
     DepData* data = (DepData*)params;
     WCHAR txt[100];
     deposit *= 1 + data->percent / 100.0;
     _snwprintf_s(txt, 100, L"month %d perc %.2f, total %.2f", data->month, data->percent, deposit);
     SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
-    ++counter;
-    if (counter == 11)
-    {
-        _snwprintf_s(txt, 100, L"Your balance after %d months : %.2f", data->month, deposit);
-        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
-        counter = -1;
-        //*hts = 0;
-        CloseHandle(hts);
-    }
     delete data;
+    activeThreads--;
+    if (activeThreads == 0) // It was the last thread
+    {
+        // launch finalizer
+        CreateThread(NULL, 0, Finalizer, NULL, 0, NULL);
+
+    }
     return 0;
 }
 
 
 
 void StartThread3() {
-    deposit = 100;
-    
+ 
+    activeThreads = 0;
+
     for (size_t i = 0; i < 12; i++) {
         hts[i] = CreateThread(
             NULL,
@@ -301,10 +323,87 @@ void StartThread3() {
             0,
             NULL
         );
+        if (hts[i] != NULL) activeThreads++;
     } 
-
     
-
     // SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"End-for");
     
+}
+
+
+/************************************/
+HANDLE hts4[12];              // threads handles
+HANDLE mutex4 = NULL;               //  
+int activeThreads4;         // threads counter
+
+
+DWORD WINAPI Finalizer4(LPVOID params) {
+    for (size_t i = 0; i < 12; i++)
+    {
+        if (hts4[i] != NULL)
+        {
+            CloseHandle(hts4[i]);
+            hts4[i] = NULL;
+        }
+    }
+    CloseHandle(mutex4);
+    mutex4 = NULL;
+    WCHAR txt[100];
+    _snwprintf_s(txt, 100, L"------ total %.2f", deposit);
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
+    return 0;
+}
+
+DWORD WINAPI ThreadProc4(LPVOID params) {
+    DepData* data = (DepData*)params;
+    WCHAR txt[100];
+    DWORD waitResult = WaitForSingleObject(mutex4, INFINITE);
+    if(waitResult == WAIT_OBJECT_0) {
+        deposit *= 1 + data->percent / 100.0;
+        _snwprintf_s(txt, 100, L"month %d perc %.2f, total %.2f", data->month, data->percent, deposit);
+        // SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)txt);
+        activeThreads4--;
+        if (activeThreads4 == 0) // It was the last thread
+    {
+        // launch finalizer
+        CreateThread(NULL, 0, Finalizer4, NULL, 0, NULL);
+    }
+        ReleaseMutex(mutex4);
+    }
+    else
+    {
+        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"Mutex Wait Error");
+    }
+    delete data;
+    return 0;
+}
+
+
+void StartThread4() {
+    deposit = 100;
+    activeThreads4 = 0;
+    SendMessageW(list, LB_RESETCONTENT, 0, 0);
+    if (mutex4 != NULL)
+    {
+        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"Рано, еще работает");
+        return;
+    }
+    mutex4 = CreateMutex(NULL, FALSE, NULL);
+    if (mutex4 == NULL) {
+        SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"Mutex Error");
+        return;
+    }
+    else SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"Mutex OK");
+    for (size_t i = 0; i < 12; i++) {
+        hts4[i] = CreateThread(
+            NULL,
+            0,
+            ThreadProc4,
+            new DepData(1 + i, 10),            // Params to thread       
+            0,
+            NULL
+        );
+        if (hts4[i] != NULL) activeThreads4++;
+    }
+    SendMessageW(list, LB_ADDSTRING, 100, (LPARAM)L"End for");
 }
